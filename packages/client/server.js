@@ -2,6 +2,7 @@ import express from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
 import serialize from 'serialize-javascript'
+import helmet from 'helmet'
 
 export async function startServer() {
   const port = Number(process.env.CLIENT_PORT) || 3000
@@ -33,6 +34,27 @@ export async function startServer() {
         index: false
       })
     )
+    app.use(
+      helmet.contentSecurityPolicy({
+        useDefaults: true,
+        directives: {
+          defaultSrc: helmet.contentSecurityPolicy.dangerouslyDisableDefaultSrc,
+          scriptSrc: [
+            '\'self\'',
+            'https: \'unsafe-inline\'',
+            'https://ya-praktikum.tech/api/v2/*',
+            'localhost:*'
+          ],
+          imgSrc: ['\'self\'', 'data:', 'blob:', 'https://ya-praktikum.tech/'],
+          connectSrc: [
+            '\'self\'',
+            'https: \'unsafe-inline\'',
+            'https://ya-praktikum.tech/api/v2/*',
+            'localhost:*'
+          ]
+        }
+      })
+    )
   }
 
   app.use('*', async (req, res) => {
@@ -60,9 +82,7 @@ export async function startServer() {
         .replace(`<!--emotionCss-->`, emotionCss)
         .replace(
           `<!--app-state-->`,
-          `<script>window.__PRELOADED_STATE__=${serialize(
-            state
-          )}</script>`
+          `<script>window.__PRELOADED_STATE__=${serialize(state)}</script>`
         )
       res.status(200).set({ 'Content-Type': 'text/html' }).end(html)
     } catch (e) {
