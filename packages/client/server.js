@@ -2,6 +2,7 @@ import express from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
 import serialize from 'serialize-javascript'
+import helmet from 'helmet'
 
 export async function startServer() {
   const port = Number(process.env.CLIENT_PORT) || 3000
@@ -31,6 +32,27 @@ export async function startServer() {
     app.use(
       (await import('serve-static')).default(path.resolve('dist/client'), {
         index: false
+      })
+    )
+    app.use(
+      helmet.contentSecurityPolicy({
+        useDefaults: true,
+        directives: {
+          defaultSrc: helmet.contentSecurityPolicy.dangerouslyDisableDefaultSrc,
+          scriptSrc: [
+            '\'self\'',
+            'https: \'unsafe-inline\'',
+            'https://ya-praktikum.tech/api/v2/*',
+            'localhost:*'
+          ],
+          imgSrc: ['\'self\'', 'data:', 'blob:', 'https://ya-praktikum.tech/'],
+          connectSrc: [
+            '\'self\'',
+            'https: \'unsafe-inline\'',
+            'https://ya-praktikum.tech/api/v2/*',
+            'localhost:*'
+          ]
+        }
       })
     )
   }
